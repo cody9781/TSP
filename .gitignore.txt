@@ -1,7 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,windows
 
-secret.json
+#secret.json
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
