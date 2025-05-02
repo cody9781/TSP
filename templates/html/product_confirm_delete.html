@@ -1,0 +1,18 @@
+
+
+{% extends "html/base.html" %}
+{% block content %}
+<div class="card">
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="card-body text-center">
+            <h4 class="card-title">제품 삭제</h4>
+            <p>정말로 <strong>{{ product.name }}</strong>  자재를 삭제하시겠습니까?</p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <button type="submit" class="btn btn-danger">삭제</button>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary">취소</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

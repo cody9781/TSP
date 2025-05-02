@@ -1,0 +1,74 @@
+{% extends "html/base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">자재관리</h5>
+        <div class="table-responsive">
+            <table
+                    id="zero_config"
+                    class="table table-striped table-bordered"
+            >
+                <colgroup>
+                    <col style="width: 8%;">
+                    <col style="width: 10%;">
+                    <col style="width: 10%;">
+                    <col style="width: 15%;">
+                    <col style="width: 12%;">
+                    <col style="width: 12%;">
+                    <col style="width: 8%;">
+                    <col style="width: 20%;">
+                </colgroup>
+
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>품명</th>
+                    <th>품번</th>
+                    <th>사양</th>
+                    <th>제작사</th>
+                    <th>공급처</th>
+                    <th>재고수량</th>
+                    <th>비고</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <a href="{% url 'item_edit' item.ts_id %}">
+                            {{ item.ts_id }}
+                        </a>
+                    </td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.supply_id }}</td>
+                    <td>{{ item.spec }}</td>
+                    <td>{{ item.production_company }}</td>
+                    <td>{{ item.supply_company }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.description }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">등록된 제품이 없습니다.</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                <tr>
+                     <th>ID</th>
+                    <th>품명</th>
+                    <th>품번</th>
+                    <th>사양</th>
+                    <th>제작사</th>
+                    <th>공급처</th>
+                    <th>재고수량</th>
+                    <th>비고</th>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

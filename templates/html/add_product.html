@@ -1,0 +1,225 @@
+{% extends "html/base.html" %}
+{% block content %}
+<div class="card">
+    <form class="form-horizontal" method="POST" action="">
+        <!-- CSRF Token (Django 템플릿 사용 시) -->
+        {% csrf_token %}
+        <div class="card-body">
+            <h4 class="card-title">제품 추가</h4>
+            <div class="form-group row">
+                <label for="name" class="col-sm-1 text-end control-label col-form-label">제품명</label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" id="name" name="name"
+                           value="{{ product.name }}" placeholder="추가하려는 제품명"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="description" class="col-sm-1 text-end control-label col-form-label">비고</label>
+                <div class="col-sm-5">
+                    <textarea class="form-control" id="description" name="description"
+                              placeholder="설명 입력" rows="4">{{ item.description }}</textarea>
+                </div>
+            </div>
+
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">필요 자재 목록</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">
+<!-- <label class="customcheckbox mb-3">
+                                    <input type="checkbox" id="mainCheckbox"/>
+                                    <span class="checkmark"></span>
+                                </label>
+                                -->
+                            </th>
+                            <th scope="col">ID</th>
+                            <th scope="col">품명</th>
+                            <th scope="col">품번</th>
+                            <th scope="col">사양</th>
+                            <th scope="col">제작사</th>
+                            <th scope="col">공급처</th>
+                            <th scope="col">재고수량</th>
+                        </tr>
+                        </thead>
+                        <tbody class="customtable">
+                        {% for material in materials %}
+                        <tr>
+                            <th>
+                                <label class="customcheckbox">
+                                    <input type="checkbox" name="materials" value="{{ material.pk }}"
+                                           class="listCheckbox"/>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </th>
+                            <td>{{ material.ts_id }}</td>
+                            <td>{{ material.name }}</td>
+                            <td>{{ material.supply_id }}</td>
+                            <td>{{ material.spec }}</td>
+                            <td>{{ material.production_company }}</td>
+                            <td>{{ material.supply_company }}</td>
+                            <td>{{ material.quantity }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">등록된 자재가 없습니다</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+
+            <script>
+                document.getElementById('mainCheckbox').addEventListener('click', function (e) {
+                    const checkboxes = document.getElementsByClassName('listCheckbox');
+                    for (let checkbox of checkboxes) {
+                        checkbox.checked = e.target.checked;
+                    }
+                });
+            </script>
+
+
+            <div class="border-top">
+                <div class="card-body d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// 검색 입력창 생성
+const searchInput = document.createElement('input');
+searchInput.setAttribute('type', 'text');
+searchInput.setAttribute('id', 'materialSearch');
+searchInput.setAttribute('placeholder', '자재 검색...');
+searchInput.setAttribute('class', 'form-control mb-3');
+
+// 테이블 위에 검색창 삽입
+const tableContainer = document.querySelector('.table-responsive');
+tableContainer.parentNode.insertBefore(searchInput, tableContainer);
+
+// Pagination 변수
+const rowsPerPage = 20;
+let currentPage = 1;
+
+// Pagination 컨트롤 생성
+const paginationControls = document.createElement('div');
+paginationControls.setAttribute('id', 'paginationControls');
+paginationControls.style.marginTop = '10px';
+paginationControls.style.textAlign = 'center';
+
+const prevButton = document.createElement('button');
+prevButton.textContent = '이전';
+prevButton.className = 'btn btn-secondary me-2';
+
+const nextButton = document.createElement('button');
+nextButton.textContent = '다음';
+nextButton.className = 'btn btn-secondary';
+
+const pageInfo = document.createElement('span');
+pageInfo.style.margin = '0 10px';
+
+// 컨트롤 조립
+paginationControls.appendChild(prevButton);
+paginationControls.appendChild(pageInfo);
+paginationControls.appendChild(nextButton);
+
+// 테이블 아래에 컨트롤 삽입
+tableContainer.parentNode.insertBefore(paginationControls, tableContainer.nextSibling);
+
+// 1. 버튼 생성 및 이벤트
+const showCheckedBtn = document.createElement('button');
+showCheckedBtn.textContent = '체크된 자재만 보기';
+showCheckedBtn.className = 'btn btn-outline-primary mb-3 ms-2';
+showCheckedBtn.type = 'button';
+
+let showOnlyChecked = false;
+searchInput.parentNode.insertBefore(showCheckedBtn, searchInput.nextSibling);
+
+showCheckedBtn.addEventListener('click', function() {
+    showOnlyChecked = !showOnlyChecked;
+    showCheckedBtn.textContent = showOnlyChecked ? '전체 자재 보기' : '체크된 자재만 보기';
+    currentPage = 1;
+    showPage(currentPage);
+});
+
+
+
+// 2. getFilteredRows 함수 수정
+function getFilteredRows() {
+    const filter = searchInput.value.toLowerCase();
+    const allRows = Array.from(document.querySelectorAll('.customtable tr'));
+    return allRows.filter(row => {
+        // 검색어 필터
+        const cells = row.querySelectorAll('td');
+        let match = true;
+        if (filter) {
+            match = Array.from(cells).some(cell =>
+                cell.textContent.toLowerCase().indexOf(filter) > -1
+            );
+        }
+        // 체크박스 필터
+        if (showOnlyChecked) {
+            const checkbox = row.querySelector('input[type="checkbox"].listCheckbox');
+            if (!checkbox || !checkbox.checked) {
+                return false;
+            }
+        }
+        return match;
+    });
+}
+
+function showPage(page) {
+    const filteredRows = getFilteredRows();
+    const totalRows = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+    // 페이지 범위 보정
+    if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
+    currentPage = page;
+
+    // 모든 행 숨김
+    document.querySelectorAll('.customtable tr').forEach(row => row.style.display = 'none');
+
+    // 현재 페이지 행만 표시
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+    // 페이지 정보 및 버튼 상태 갱신
+    pageInfo.textContent = `${currentPage} / ${totalPages}`;
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+}
+
+// 버튼 이벤트
+prevButton.addEventListener('click', () => {
+    showPage(currentPage - 1);
+});
+nextButton.addEventListener('click', () => {
+    showPage(currentPage + 1);
+});
+
+// 검색 이벤트
+searchInput.addEventListener('keyup', function() {
+    currentPage = 1;
+    showPage(currentPage);
+});
+
+// 최초 실행
+showPage(currentPage);
+
+
+</script>
+
+{% endblock %}
