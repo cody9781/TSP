@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Item, Product
 from .forms import ItemForm, ProductForm
+from django.contrib import messages
 # Create your views here.
 
 from django.http import HttpResponse
@@ -60,6 +61,26 @@ def item_delete(request, pk):
         item.delete()
         return redirect('item_list')
     return render(request, 'html/item_confirm_delete.html', {'item': item})
+
+@login_required
+def item_in(request, pk):
+    item = get_object_or_404(Item, ts_id=pk)
+    item.quantity += 1  # 입고: 수량 1 증가
+    item.save()
+    messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
+    return redirect('item_list')  # 재고 리스트 페이지로 리다이렉트
+
+@login_required
+def item_out(request, pk):
+    item = get_object_or_404(Item, ts_id=pk)
+    if item.quantity > 0:
+        item.quantity -= 1  # 출고: 수량 1 감소
+        item.save()
+        messages.success(request, f"{item.name} 출고 완료 (현재 수량: {item.quantity})")
+    else:
+        messages.error(request, f"{item.name}의 재고가 부족합니다.")
+    return redirect('item_list')
+
 
 
 @login_required
