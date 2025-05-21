@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from .models import Item, Product
 from .forms import ItemForm, ProductForm
@@ -14,9 +15,25 @@ def test(request):
     return render(request, 'temp/mine/tables.html')
 
 
+#def item_list(request):
+#    items = Item.objects.all
+#    return render(request, 'html/item_list.html', {'items': items})
+
 def item_list(request):
-    items = Item.objects.all
+    q = request.GET.get('q', '')
+    items = Item.objects.all()
+    if q:
+        items = items.filter(
+            Q(name__icontains=q) |
+            Q(supply_id__icontains=q) |
+            Q(spec__icontains=q) |
+            Q(production_company__icontains=q) |
+            Q(supply_company__icontains=q) |
+            Q(description__icontains=q)
+        )
     return render(request, 'html/item_list.html', {'items': items})
+
+
 
 @login_required
 def add_item(request):
@@ -64,7 +81,7 @@ def item_delete(request, pk):
 
 @login_required
 def item_in(request, pk):
-    item = get_object_or_404(Item, ts_id=pk)
+    item = get_object_or_404(Item, id=pk)
     item.quantity += 1  # 입고: 수량 1 증가
     item.save()
     messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
@@ -72,7 +89,7 @@ def item_in(request, pk):
 
 @login_required
 def item_out(request, pk):
-    item = get_object_or_404(Item, ts_id=pk)
+    item = get_object_or_404(Item, id=pk)
     if item.quantity > 0:
         item.quantity -= 1  # 출고: 수량 1 감소
         item.save()

@@ -41,7 +41,7 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('inventory/', include('inventory.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login1.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='/items'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='/item_list'), name='logout'),
     path('register/', account.views.register, name='register'),
 
     path('test/', inventory.views.test, name='test'),

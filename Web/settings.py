@@ -20,7 +20,7 @@ from django.conf.global_settings import STATICFILES_DIRS
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#템플릿 경로
+# 템플릿 경로
 TEMPLATE_DIR = os.path.join(BASE_DIR / 'templates')
 
 # static 경로
@@ -52,16 +52,10 @@ def get_secret(setting, secrets=secrets):
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
-
-
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.200', '*']
-
-
-
 
 # Application definition
 
@@ -73,7 +67,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'account',
-    'inventory'
+    'inventory',
+    'import_export',
 
 ]
 
@@ -86,10 +81,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-
-
-
 
 ROOT_URLCONF = 'Web.urls'
 
@@ -110,18 +101,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Web.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#'default': {
+# 'default': {
 #        'ENGINE': 'django.db.backends.mysql',
 #        'NAME': BASE_DIR / 'db.sqlite3',
 #    }
 
 DATABASES = {
 
-'default': {
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'tsp',
         'USER': 'admin',
@@ -134,7 +124,6 @@ DATABASES = {
         }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -154,8 +143,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -167,13 +154,10 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-#STATIC_URL = 'static/'
+# STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -2,27 +2,33 @@
 {% block content %}
 
 <style>
-  .messages {
-    font-size: 2rem; /* 원하는 크기로 조정 (예: 24px, 2em 등) */
-    font-weight: bold;
-    margin: 20px 0;
-  }
-  .messages li {
-    margin-bottom: 8px;
-  }
+    .messages {
+      font-size: 2rem; /* 원하는 크기로 조정 (예: 24px, 2em 등) */
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    .messages li {
+      margin-bottom: 8px;
+    }
 </style>
 
 {% if messages %}
-  <ul class="messages">
+<ul class="messages">
     {% for message in messages %}
-      <li class="{{ message.tags }}">{{ message }}</li>
+    <li class="{{ message.tags }}">{{ message }}</li>
     {% endfor %}
-  </ul>
+</ul>
 {% endif %}
 
 <div class="card">
     <div class="card-body">
         <h5 class="card-title">자재관리</h5>
+        <form method="get" class="mb-3" style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="검색어를 입력하세요" value="{{ request.GET.q }}">
+            <button type="submit" class="btn btn-primary">검색</button>
+            <a href="{% url 'item_list' %}" class="btn btn-secondary">초기화</a>
+        </form>
+
         <div class="table-responsive">
             <table
                     id="zero_config"
@@ -57,19 +63,26 @@
                 {% for item in items %}
                 <tr>
                     <td>
-                        <a href="{% url 'item_edit' item.ts_id %}">
+                        <a href="{% url 'item_edit' item.id %}">
                             {{ item.ts_id }}
                         </a>
                     </td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.supply_id }}</td>
+                    <td>
+                        {{ item.name }}
+
+                    </td>
+                    <td>
+                        <a href="{% url 'item_edit' item.id %}">
+                            {{ item.supply_id }}
+                        </a>
+                    </td>
                     <td>{{ item.spec }}</td>
                     <td>{{ item.production_company }}</td>
                     <td>{{ item.supply_company }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>
-                        <a href="{% url 'item_in' item.ts_id %}" class="btn btn-outline-success">입고</a>
-                        <a href="{% url 'item_out' item.ts_id %}" class="btn btn-outline-danger">출고</a>
+                        <a href="{% url 'item_in' item.id %}" class="btn btn-outline-success">입고</a>
+                        <a href="{% url 'item_out' item.id %}" class="btn btn-outline-danger">출고</a>
                     </td>
 
                     <td>{{ item.description }}</td>
