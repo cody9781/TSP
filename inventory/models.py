@@ -17,7 +17,7 @@ class Item(models.Model):
     ts_id = models.CharField(max_length=15, blank=True)
     name = models.CharField(max_length=30, blank=True)
     supply_id = models.CharField(max_length=50, blank=True)
-    spec = models.CharField(max_length=60, blank=True)
+    spec = models.CharField(max_length=70, blank=True)
     production_company = models.CharField(max_length=30, blank=True)
     supply_company = models.CharField(max_length=30, blank=True)
     unit_price = models.PositiveIntegerField(default=0, blank=True, null=True)
