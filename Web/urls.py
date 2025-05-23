@@ -28,6 +28,7 @@ urlpatterns = [
     path('item_list/', inventory.views.item_list, name='item_list'),
     path('add_item/', inventory.views.add_item, name='add_item'),
     path('item/<str:pk>/edit/', inventory.views.item_edit, name='item_edit'),
+    path('item/<str:pk>/view/', inventory.views.item_view, name='item_view'),
     path('item/<str:pk>/delete/', inventory.views.item_delete, name='item_delete'),
     path('item/in/<str:pk>/', inventory.views.item_in, name='item_in'),
     path('item/out/<str:pk>/', inventory.views.item_out, name='item_out'),

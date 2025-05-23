@@ -40,8 +40,8 @@
                     <col style="width: 10%;">
                     <col style="width: 15%;">
                     <col style="width: 12%;">
-                    <col style="width: 12%;">
-                    <col style="width: 8%;">
+                    <col style="width: 10%;">
+                    <col style="width: 10%;">
                     <col style="width: 10%;"> <!-- 입고/출고 버튼 -->
                     <col style="width: 20%;">
                 </colgroup>
@@ -54,7 +54,7 @@
                     <th>사양</th>
                     <th>제작사</th>
                     <th>공급처</th>
-                    <th>재고수량</th>
+                    <th>재고/구매수량</th>
                     <th>입고/출고</th> <!-- 추가 -->
                     <th>비고</th>
                 </tr>
@@ -72,14 +72,14 @@
 
                     </td>
                     <td>
-                        <a href="{% url 'item_edit' item.id %}">
+                        <a href="{% url 'item_view' item.id %}">
                             {{ item.supply_id }}
                         </a>
                     </td>
                     <td>{{ item.spec }}</td>
                     <td>{{ item.production_company }}</td>
                     <td>{{ item.supply_company }}</td>
-                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.quantity }} / {{item.purchase_quantity}}</td>
                     <td>
                         <a href="{% url 'item_in' item.id %}" class="btn btn-outline-success">입고</a>
                         <a href="{% url 'item_out' item.id %}" class="btn btn-outline-danger">출고</a>

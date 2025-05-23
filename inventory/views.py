@@ -63,6 +63,24 @@ def item_edit(request, pk):
         form = ItemForm(instance=item)
     return render(request, 'html/form_edit.html', {'form' : form, 'item': item})
 
+
+
+
+    # if request.method == 'POST':
+    #     form = ItemForm(request.POST, instance=item)
+    #     if form.is_valid():
+    #         form.save()
+    #         return redirect('item_list')
+    # else:
+    #     form = ItemForm(instance=item)
+
+
+@login_required
+def item_view(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    products = item.products.all()
+    return render(request, 'html/item_view.html', { 'item': item, 'products': products})
+
 @login_required
 def item_delete1(request, pk):
     item = get_object_or_404(Item, pk=pk)

@@ -2,71 +2,70 @@
 {% block content %}
 <div class="card">
     <form class="form-horizontal" method="POST" action="">
-        <!-- CSRF Token (Django 템플릿 사용 시) -->
         {% csrf_token %}
         <div class="card-body">
-            <h4 class="card-title">자재 추가</h4>
+            <h4 class="card-title">자재</h4>
             <div class="form-group row">
                 <label for="ts_id" class="col-sm-1 text-end control-label col-form-label">ID(자재코드)</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="ts_id" name="ts_id"
-                           value="{{ item.ts_id }}" placeholder="TSP_ID 입력"/>
+                           value="{{ item.ts_id }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="name" class="col-sm-1 text-end control-label col-form-label">품명</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="name" name="name"
-                           value="{{ item.name }}" placeholder="품명 입력"/>
+                           value="{{ item.name }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="supply_id" class="col-sm-1 text-end control-label col-form-label">품번</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="supply_id" name="supply_id"
-                           value="{{ item.supply_id }}" placeholder="품번(제작사) 입력"/>
+                           value="{{ item.supply_id }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="spec" class="col-sm-1 text-end control-label col-form-label">사양</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="spec" name="spec"
-                           value="{{ item.spec }}" placeholder="사양 입력"/>
+                           value="{{ item.spec }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="production_company" class="col-sm-1 text-end control-label col-form-label">제작사</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="production_company" name="production_company"
-                           value="{{ item.production_company }}" placeholder="제작사 입력"/>
+                           value="{{ item.production_company }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="supply_company" class="col-sm-1 text-end control-label col-form-label">공급처</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="supply_company" name="supply_company"
-                           value="{{ item.supply_company }}" placeholder="공급처 입력"/>
+                           value="{{ item.supply_company }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="unit_price" class="col-sm-1 text-end control-label col-form-label">단가(UNIT)</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="unit_price" name="unit_price"
-                           value="0" placeholder="개당 단가 입력"/>
+                           value="{{ item.unit_price }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="moq_price" class="col-sm-1 text-end control-label col-form-label">단가(MOQ)</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="moq_price" name="moq_price"
-                           value="0" placeholder="MOQ 단가 입력"/>
+                           value="{{ item.moq_price }}" readonly/>
                 </div>
             </div>
             <div class="form-group row">
                 <label for="quantity" class="col-sm-1 text-end control-label col-form-label">재고 수량</label>
                 <div class="col-sm-5">
                     <input type="number" class="form-control" id="quantity" name="quantity"
-                           value="0" placeholder="재고 수량 입력" step="1"
+                           value="{{ item.quantity }}" readonly step="1"
                            min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
                 </div>
             </div>
@@ -74,7 +73,7 @@
                 <label for="purchase_quantity" class="col-sm-1 text-end control-label col-form-label">구매 수량</label>
                 <div class="col-sm-5">
                     <input type="number" class="form-control" id="purchase_quantity" name="purchase_quantity"
-                           value="0" placeholder="재고 수량 입력" step="1"
+                           value="{{ item.purchase_quantity }}" readonly step="1"
                            min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
                 </div>
             </div>
@@ -82,7 +81,7 @@
                 <label for="moq" class="col-sm-1 text-end control-label col-form-label">MOQ</label>
                 <div class="col-sm-5">
                     <input type="number" class="form-control" id="moq" name="moq"
-                           value="{{ item.moq }}" placeholder="MOQ 입력"
+                           value="{{ item.moq }}" readonly
                            step="1" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
                 </div>
             </div>
@@ -90,7 +89,7 @@
                 <label for="delivery_date" class="col-sm-1 text-end control-label col-form-label">납기(장 or 단)</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="delivery_date" name="delivery_date"
-                           value="{{ item.delivery_date }}" placeholder="납기(장 or 단) 입력"/>
+                           value="{{ item.delivery_date }}" readonly/>
                 </div>
             </div>
 
@@ -99,19 +98,39 @@
                 <label for="description" class="col-sm-1 text-end control-label col-form-label">비고</label>
                 <div class="col-sm-5">
                     <textarea class="form-control" id="description" name="description"
-                              placeholder="설명 입력" rows="5"></textarea>
+                              readonly rows="5">{{ item.description }}</textarea>
                 </div>
             </div>
+            <br>
+            <h5>이 자재가 포함된 제품 리스트</h5>
+            <ul>
+                {% for product in products %}
+                <li>
+                    <a href="{% url 'product_edit' product.name %}">
+                        {{ product.name }}
+                    </a>
+                </li>
+                {% empty %}
+                <li>이 자재를 사용하는 제품이 없습니다.</li>
+                {% endfor %}
+            </ul>
+
+
         </div>
 
         <div class="border-top">
-            <div class="card-body d-flex justify-content-center">
+            <div class="card-body d-flex justify-content-center gap-3">
                 <form method="POST" action="">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">추가</button>
+                    <a href="{% url 'item_edit' item.pk %}" class="btn btn-primary">수정하기</a>
                 </form>
+
             </div>
         </div>
+
     </form>
+
 </div>
 {% endblock %}
+
+

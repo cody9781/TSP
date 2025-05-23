@@ -42,7 +42,7 @@
                             <th scope="col">사양</th>
                             <th scope="col">제작사</th>
                             <th scope="col">공급처</th>
-                            <th scope="col">재고수량</th>
+                            <th scope="col">재고/구매수량</th>
                         </tr>
                         </thead>
                         <tbody class="customtable">
@@ -58,11 +58,16 @@
                             </th>
                             <td>{{ material.ts_id }}</td>
                             <td>{{ material.name }}</td>
-                            <td>{{ material.supply_id }}</td>
+
+                            <td>
+                                <a href="{% url 'item_view' material.id %}">
+                                    {{ material.supply_id }}
+                                </a>
+                            </td>
                             <td>{{ material.spec }}</td>
                             <td>{{ material.production_company }}</td>
                             <td>{{ material.supply_company }}</td>
-                            <td>{{ material.quantity }}</td>
+                            <td>{{ material.quantity }} / {{material.purchase_quantity}}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -88,7 +93,8 @@
                     <button type="submit" class="btn btn-primary">수정</button>
 
                     <div class="d-flex justify-content-center">
-                        <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-danger ms-2" style="font-size:15px;">삭제</a>
+                        <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-danger ms-2"
+                           style="font-size:15px;">삭제</a>
                     </div>
                 </div>
 

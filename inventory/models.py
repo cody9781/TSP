@@ -23,6 +23,7 @@ class Item(models.Model):
     unit_price = models.PositiveIntegerField(default=0, blank=True, null=True)
     moq_price = models.PositiveIntegerField(default=0, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=0, blank=True, null=True)
+    purchase_quantity = models.PositiveIntegerField(default=0, blank=True, null=True)
     moq = models.CharField(max_length=10, blank=True)
     delivery_date = models.CharField(max_length=10, blank=True)
     description = models.TextField(blank=True)

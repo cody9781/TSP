@@ -43,7 +43,7 @@
                             <th scope="col">사양</th>
                             <th scope="col">제작사</th>
                             <th scope="col">공급처</th>
-                            <th scope="col">재고수량</th>
+                            <th scope="col">재고/구매수량</th>
                         </tr>
                         </thead>
                         <tbody class="customtable">
@@ -62,7 +62,7 @@
                             <td>{{ material.spec }}</td>
                             <td>{{ material.production_company }}</td>
                             <td>{{ material.supply_company }}</td>
-                            <td>{{ material.quantity }}</td>
+                            <td>{{ material.quantity }} / {{material.purchase_quantity}}</td>
                         </tr>
                         {% empty %}
                         <tr>

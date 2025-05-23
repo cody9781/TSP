@@ -70,6 +70,14 @@
                 </div>
             </div>
             <div class="form-group row">
+                <label for="purchase_quantity" class="col-sm-1 text-end control-label col-form-label">구매 수량</label>
+                <div class="col-sm-5">
+                    <input type="number" class="form-control" id="purchase_quantity" name="purchase_quantity"
+                           value="{{ item.purchase_quantity }}" placeholder="구매 수량 입력" step="1"
+                           min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                </div>
+            </div>
+            <div class="form-group row">
                 <label for="moq" class="col-sm-1 text-end control-label col-form-label">MOQ</label>
                 <div class="col-sm-5">
                     <input type="number" class="form-control" id="moq" name="moq"
@@ -99,7 +107,7 @@
             <div class="card-body d-flex justify-content-center gap-3">
                 <form method="POST" action="">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">수정</button>
+                    <button type="submit" class="btn btn-primary">수정완료</button>
 
                      <a href="{% url 'item_delete' item.pk %}" class="btn btn-danger">삭제</a>
                 </form>
