@@ -26,24 +26,20 @@
                 <div class="card-body">
                     <h5 class="card-title mb-0">필요 자재 목록</h5>
                 </div>
+
                 <div class="table-responsive">
                     <table class="table">
                         <thead class="thead-light">
                         <tr>
-                            <th scope="col">
-<!-- <label class="customcheckbox mb-3">
-                                    <input type="checkbox" id="mainCheckbox"/>
-                                    <span class="checkmark"></span>
-                                </label>
-                                -->
-                            </th>
+                            <th scope="col"></th>
                             <th scope="col">ID</th>
                             <th scope="col">품명</th>
                             <th scope="col">품번</th>
                             <th scope="col">사양</th>
                             <th scope="col">제작사</th>
                             <th scope="col">공급처</th>
-                            <th scope="col">재고/구매수량</th>
+                            <th scope="col">재고</th>
+                            <th scope="col">위치</th>
                         </tr>
                         </thead>
                         <tbody class="customtable">
@@ -52,17 +48,23 @@
                             <th>
                                 <label class="customcheckbox">
                                     <input type="checkbox" name="materials" value="{{ material.pk }}"
-                                           class="listCheckbox"/>
+                                           class="listCheckbox"
+                                           {% if material.pk in product_materials %}checked{% endif %}/>
                                     <span class="checkmark"></span>
                                 </label>
                             </th>
                             <td>{{ material.ts_id }}</td>
                             <td>{{ material.name }}</td>
-                            <td>{{ material.supply_id }}</td>
+                            <td>
+                                <a href="{% url 'item_view' material.id %}">
+                                    {{ material.supply_id }}
+                                </a>
+                            </td>
                             <td>{{ material.spec }}</td>
                             <td>{{ material.production_company }}</td>
                             <td>{{ material.supply_company }}</td>
-                            <td>{{ material.quantity }} / {{material.purchase_quantity}}</td>
+                            <td>{{ material.quantity }}</td>
+                            <td>{{ material.stock_location }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -72,6 +74,9 @@
                         </tbody>
                     </table>
                 </div>
+
+
+
             </div>
 
 
@@ -97,129 +102,163 @@
 </div>
 
 <script>
-// 검색 입력창 생성
-const searchInput = document.createElement('input');
-searchInput.setAttribute('type', 'text');
-searchInput.setAttribute('id', 'materialSearch');
-searchInput.setAttribute('placeholder', '자재 검색...');
-searchInput.setAttribute('class', 'form-control mb-3');
+ // 1. 검색 셀렉트 박스와 입력창 생성
+    const searchContainer = document.createElement('div');
+    searchContainer.style.display = 'flex';
+    searchContainer.style.gap = '10px';
+    searchContainer.style.marginBottom = '10px';
 
-// 테이블 위에 검색창 삽입
-const tableContainer = document.querySelector('.table-responsive');
-tableContainer.parentNode.insertBefore(searchInput, tableContainer);
+    // 검색 컬럼 선택 셀렉트 박스
+    const columnSelect = document.createElement('select');
+    columnSelect.setAttribute('id', 'columnSelect');
+    columnSelect.setAttribute('class', 'form-select');
+    columnSelect.style.width = '120px';
+    columnSelect.innerHTML = `
+        <option value="">전체 검색</option>
+        <option value="0">ID</option>
+        <option value="1">품명</option>
+        <option value="2">품번</option>
+        <option value="3">사양</option>
+        <option value="4">제작사</option>
+        <option value="5">공급처</option>
+        <option value="6">재고</option>
+        <option value="7">위치</option>
+    `;
 
-// Pagination 변수
-const rowsPerPage = 20;
-let currentPage = 1;
+    // 검색 입력창
+    const searchInput = document.createElement('input');
+    searchInput.setAttribute('type', 'text');
+    searchInput.setAttribute('id', 'materialSearch');
+    searchInput.setAttribute('placeholder', '자재 검색...');
+    searchInput.setAttribute('class', 'form-control');
 
-// Pagination 컨트롤 생성
-const paginationControls = document.createElement('div');
-paginationControls.setAttribute('id', 'paginationControls');
-paginationControls.style.marginTop = '10px';
-paginationControls.style.textAlign = 'center';
+    searchContainer.appendChild(columnSelect);
+    searchContainer.appendChild(searchInput);
 
-const prevButton = document.createElement('button');
-prevButton.textContent = '이전';
-prevButton.className = 'btn btn-secondary me-2';
+    // 테이블 위에 검색창 삽입
+    const tableContainer = document.querySelector('.table-responsive');
+    tableContainer.parentNode.insertBefore(searchContainer, tableContainer);
 
-const nextButton = document.createElement('button');
-nextButton.textContent = '다음';
-nextButton.className = 'btn btn-secondary';
+    // 2. 페이지네이션 등 기존 코드 (생략 가능)
+    const rowsPerPage = 20;
+    let currentPage = 1;
 
-const pageInfo = document.createElement('span');
-pageInfo.style.margin = '0 10px';
+    const paginationControls = document.createElement('div');
+    paginationControls.setAttribute('id', 'paginationControls');
+    paginationControls.style.marginTop = '10px';
+    paginationControls.style.textAlign = 'center';
 
-// 컨트롤 조립
-paginationControls.appendChild(prevButton);
-paginationControls.appendChild(pageInfo);
-paginationControls.appendChild(nextButton);
+    const prevButton = document.createElement('button');
+    prevButton.textContent = '이전';
+    prevButton.className = 'btn btn-secondary me-2';
+    prevButton.type = 'button';
 
-// 테이블 아래에 컨트롤 삽입
-tableContainer.parentNode.insertBefore(paginationControls, tableContainer.nextSibling);
+    const nextButton = document.createElement('button');
+    nextButton.textContent = '다음';
+    nextButton.className = 'btn btn-secondary';
+    nextButton.type = 'button';
 
-// 1. 버튼 생성 및 이벤트
-const showCheckedBtn = document.createElement('button');
-showCheckedBtn.textContent = '체크된 자재만 보기';
-showCheckedBtn.className = 'btn btn-outline-primary mb-3 ms-2';
-showCheckedBtn.type = 'button';
+    const pageInfo = document.createElement('span');
+    pageInfo.style.margin = '0 10px';
 
-let showOnlyChecked = false;
-searchInput.parentNode.insertBefore(showCheckedBtn, searchInput.nextSibling);
+    paginationControls.appendChild(prevButton);
+    paginationControls.appendChild(pageInfo);
+    paginationControls.appendChild(nextButton);
 
-showCheckedBtn.addEventListener('click', function() {
-    showOnlyChecked = !showOnlyChecked;
-    showCheckedBtn.textContent = showOnlyChecked ? '전체 자재 보기' : '체크된 자재만 보기';
-    currentPage = 1;
-    showPage(currentPage);
-});
+    tableContainer.parentNode.insertBefore(paginationControls, tableContainer.nextSibling);
+
+    // 3. 체크된 자재만 보기 버튼 (생략 가능)
+    const showCheckedBtn = document.createElement('button');
+    showCheckedBtn.textContent = '체크된 자재만 보기';
+    showCheckedBtn.className = 'btn btn-outline-primary mb-3 ms-2';
+    showCheckedBtn.type = 'button';
+
+showCheckedBtn.style.width = '180px';
+showCheckedBtn.style.height = '40px';
 
 
+    let showOnlyChecked = false;
 
-// 2. getFilteredRows 함수 수정
-function getFilteredRows() {
-    const filter = searchInput.value.toLowerCase();
-    const allRows = Array.from(document.querySelectorAll('.customtable tr'));
-    return allRows.filter(row => {
-        // 검색어 필터
-        const cells = row.querySelectorAll('td');
-        let match = true;
-        if (filter) {
-            match = Array.from(cells).some(cell =>
-                cell.textContent.toLowerCase().indexOf(filter) > -1
-            );
-        }
-        // 체크박스 필터
-        if (showOnlyChecked) {
-            const checkbox = row.querySelector('input[type="checkbox"].listCheckbox');
-            if (!checkbox || !checkbox.checked) {
-                return false;
-            }
-        }
-        return match;
+    searchContainer.prepend(showCheckedBtn);
+
+    showCheckedBtn.addEventListener('click', function () {
+        showOnlyChecked = !showOnlyChecked;
+        showCheckedBtn.textContent = showOnlyChecked ? '전체 자재 보기' : '체크된 자재만 보기';
+        currentPage = 1;
+        showPage(currentPage);
     });
-}
 
-function showPage(page) {
-    const filteredRows = getFilteredRows();
-    const totalRows = filteredRows.length;
-    const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-    // 페이지 범위 보정
-    if (page > totalPages) page = totalPages;
-    if (page < 1) page = 1;
-    currentPage = page;
+    // 4. 필터링 함수
+    function getFilteredRows() {
+        const filter = searchInput.value.toLowerCase();
+        const selectedCol = columnSelect.value; // ""이면 전체, 아니면 해당 컬럼 인덱스
+        const allRows = Array.from(document.querySelectorAll('.customtable tr'));
+        return allRows.filter(row => {
+            const cells = row.querySelectorAll('td');
+            let match = true;
+            if (filter) {
+                if (selectedCol === "") {
+                    // 전체 컬럼에서 검색
+                    match = Array.from(cells).some(cell =>
+                        cell.textContent.toLowerCase().includes(filter)
+                    );
+                } else {
+                    const idx = parseInt(selectedCol);
+                    if (cells[idx]) {
+                        match = cells[idx].textContent.toLowerCase().includes(filter);
+                    } else {
+                        match = false;
+                    }
+                }
+            }
+            if (showOnlyChecked) {
+                const checkbox = row.querySelector('input[type="checkbox"].listCheckbox');
+                if (!checkbox || !checkbox.checked) {
+                    return false;
+                }
+            }
+            return match;
+        });
+    }
 
-    // 모든 행 숨김
-    document.querySelectorAll('.customtable tr').forEach(row => row.style.display = 'none');
+    // 5. 페이지네이션 함수
+    function showPage(page) {
+        const filteredRows = getFilteredRows();
+        const totalRows = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+        if (page > totalPages) page = totalPages;
+        if (page < 1) page = 1;
+        currentPage = page;
 
-    // 현재 페이지 행만 표시
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    filteredRows.slice(start, end).forEach(row => row.style.display = '');
+        document.querySelectorAll('.customtable tr').forEach(row => row.style.display = 'none');
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
 
-    // 페이지 정보 및 버튼 상태 갱신
-    pageInfo.textContent = `${currentPage} / ${totalPages}`;
-    prevButton.disabled = currentPage === 1;
-    nextButton.disabled = currentPage === totalPages;
-}
+        pageInfo.textContent = `${currentPage} / ${totalPages}`;
+        prevButton.disabled = currentPage === 1;
+        nextButton.disabled = currentPage === totalPages;
+    }
 
-// 버튼 이벤트
-prevButton.addEventListener('click', () => {
-    showPage(currentPage - 1);
-});
-nextButton.addEventListener('click', () => {
-    showPage(currentPage + 1);
-});
+    // 6. 이벤트 바인딩
+    prevButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        showPage(currentPage - 1);
+    });
+    nextButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        showPage(currentPage + 1);
+    });
+    searchInput.addEventListener('keyup', function () {
+        currentPage = 1;
+        showPage(currentPage);
+    });
+    columnSelect.addEventListener('change', function () {
+        currentPage = 1;
+        showPage(currentPage);
+    });
 
-// 검색 이벤트
-searchInput.addEventListener('keyup', function() {
-    currentPage = 1;
     showPage(currentPage);
-});
-
-// 최초 실행
-showPage(currentPage);
-
-
 </script>
 
 {% endblock %}

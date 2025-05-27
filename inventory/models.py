@@ -25,7 +25,8 @@ class Item(models.Model):
     quantity = models.PositiveIntegerField(default=0, blank=True, null=True)
     purchase_quantity = models.PositiveIntegerField(default=0, blank=True, null=True)
     moq = models.CharField(max_length=10, blank=True)
-    delivery_date = models.CharField(max_length=10, blank=True)
+    stock_location = models.CharField(max_length=50, blank=True)
+    delivery_date = models.CharField(max_length=20, blank=True)
     description = models.TextField(blank=True)
 
     # 각 재고 항목을 등록한 사용자와 연결 (필요시)

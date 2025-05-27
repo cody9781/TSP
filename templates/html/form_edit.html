@@ -9,7 +9,7 @@
                 <label for="ts_id" class="col-sm-1 text-end control-label col-form-label">ID(자재코드)</label>
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="ts_id" name="ts_id"
-                           value="{{ item.ts_id }}" placeholder="TSP_ID 입력" />
+                           value="{{ item.ts_id }}" placeholder="TSP_ID 입력"/>
                 </div>
             </div>
             <div class="form-group row">
@@ -75,6 +75,7 @@
                     <input type="number" class="form-control" id="purchase_quantity" name="purchase_quantity"
                            value="{{ item.purchase_quantity }}" placeholder="구매 수량 입력" step="1"
                            min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                    <button type="button" class="btn btn-outline-info" id="addPurchaseToStock">구매수량 반영</button>
                 </div>
             </div>
             <div class="form-group row">
@@ -90,6 +91,14 @@
                 <div class="col-sm-5">
                     <input type="text" class="form-control" id="delivery_date" name="delivery_date"
                            value="{{ item.delivery_date }}" placeholder="납기(장 or 단) 입력"/>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="stock_location" class="col-sm-1 text-end control-label col-form-label">위치</label>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" id="stock_location" name="stock_location"
+                           value="{{ item.stock_location }}" placeholder="재고 위치 입력"/>
                 </div>
             </div>
 
@@ -109,20 +118,42 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary">수정완료</button>
 
-                     <a href="{% url 'item_delete' item.pk %}" class="btn btn-danger">삭제</a>
+                    <a href="{% url 'item_delete' item.pk %}" class="btn btn-danger">삭제</a>
                 </form>
 
             </div>
         </div>
 
     </form>
-
-
-
-
-
-
 </div>
+
+
+    <script>
+
+
+document.addEventListener('DOMContentLoaded', function () {
+        const quantityInput = document.getElementById('quantity');
+    const inBtn = document.getElementById('inBtn');
+    const outBtn = document.getElementById('outBtn');
+    const purchaseInput = document.getElementById('purchase_quantity');
+    const addPurchaseBtn = document.getElementById('addPurchaseToStock');
+
+
+     // 구매수량 반영 버튼: 구매수량을 재고수량에 더하고, 구매수량은 0으로
+    addPurchaseBtn.addEventListener('click', function () {
+        let purchaseVal = parseInt(purchaseInput.value) || 0;
+        let stockVal = parseInt(quantityInput.value) || 0;
+        quantityInput.value = stockVal + purchaseVal;
+        purchaseInput.value = 0;
+    });
+});
+
+
+
+</script>
+
+
+
 {% endblock %}
 
 

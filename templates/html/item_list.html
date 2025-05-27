@@ -23,7 +23,24 @@
 <div class="card">
     <div class="card-body">
         <h5 class="card-title">자재관리</h5>
+        <!--
         <form method="get" class="mb-3" style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="검색어를 입력하세요" value="{{ request.GET.q }}">
+            <button type="submit" class="btn btn-primary">검색</button>
+            <a href="{% url 'item_list' %}" class="btn btn-secondary">초기화</a>
+        </form>
+        -->
+        <form method="get" class="mb-3" style="display: flex; gap: 10px;">
+            <select name="field">
+                <option value="">전체검색</option>
+                <option value="ts_id" {% if request.GET.field == "ts_id" %}selected{% endif %}>ID</option>
+                <option value="name" {% if request.GET.field == "name" %}selected{% endif %}>품명</option>
+                <option value="supply_id" {% if request.GET.field == "supply_id" %}selected{% endif %}>품번</option>
+                <option value="spec" {% if request.GET.field == "spec" %}selected{% endif %}>사양</option>
+                <option value="production_company" {% if request.GET.field == "production_company" %}selected{% endif %}>제작사</option>
+                <option value="supply_company" {% if request.GET.field ==  "supply_company" %}selected{% endif %}>공급처</option>
+                <!-- 필요시 다른 항목도 추가 -->
+            </select>
             <input type="text" name="q" placeholder="검색어를 입력하세요" value="{{ request.GET.q }}">
             <button type="submit" class="btn btn-primary">검색</button>
             <a href="{% url 'item_list' %}" class="btn btn-secondary">초기화</a>
@@ -35,15 +52,16 @@
                     class="table table-striped table-bordered"
             >
                 <colgroup>
-                    <col style="width: 8%;">
+                    <col style="width: 7%;">
                     <col style="width: 10%;">
                     <col style="width: 10%;">
                     <col style="width: 15%;">
                     <col style="width: 12%;">
                     <col style="width: 10%;">
-                    <col style="width: 10%;">
+                    <col style="width: 6%;">
                     <col style="width: 10%;"> <!-- 입고/출고 버튼 -->
-                    <col style="width: 20%;">
+                    <col style="width: 10%;">
+                    <col style="width: 15%;">
                 </colgroup>
 
                 <thead>
@@ -54,10 +72,12 @@
                     <th>사양</th>
                     <th>제작사</th>
                     <th>공급처</th>
-                    <th>재고/구매수량</th>
+                    <th>재고</th>
                     <th>입고/출고</th> <!-- 추가 -->
+                    <th>위치</th>
                     <th>비고</th>
                 </tr>
+
                 </thead>
                 <tbody>
                 {% for item in items %}
@@ -79,17 +99,17 @@
                     <td>{{ item.spec }}</td>
                     <td>{{ item.production_company }}</td>
                     <td>{{ item.supply_company }}</td>
-                    <td>{{ item.quantity }} / {{item.purchase_quantity}}</td>
+                    <td>{{ item.quantity }}</td>
                     <td>
                         <a href="{% url 'item_in' item.id %}" class="btn btn-outline-success">입고</a>
                         <a href="{% url 'item_out' item.id %}" class="btn btn-outline-danger">출고</a>
                     </td>
-
+                    <td>{{ item.stock_location }}</td>
                     <td>{{ item.description }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center">등록된 제품이 없습니다.</td>
+                    <td colspan="9" class="text-center">등록된 제품이 없습니다.</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -101,8 +121,9 @@
                     <th>사양</th>
                     <th>제작사</th>
                     <th>공급처</th>
-                    <th>재고수량</th>
+                    <th>재고</th>
                     <th>입고/출고</th> <!-- 추가 -->
+                    <th>위치</th>
                     <th>비고</th>
                 </tr>
                 </tfoot>

@@ -21,16 +21,33 @@ def test(request):
 
 def item_list(request):
     q = request.GET.get('q', '')
+    field = request.GET.get('field', '')
     items = Item.objects.all()
     if q:
-        items = items.filter(
-            Q(name__icontains=q) |
-            Q(supply_id__icontains=q) |
-            Q(spec__icontains=q) |
-            Q(production_company__icontains=q) |
-            Q(supply_company__icontains=q) |
-            Q(description__icontains=q)
-        )
+        if field == 'ts_id':
+            if q.isdigit():  # id는 숫자이므로
+                items = items.filter(id=int(q))
+            else:
+                items = Item.objects.none()  # 숫자가 아니면 검색 결과 없음
+        elif field == 'name':
+            items = items.filter(name__icontains=q)
+        elif field == 'supply_id':
+            items = items.filter(supply_id__icontains=q)
+        elif field == 'spec':
+            items = items.filter(spec__icontains=q)
+        elif field == 'production_company':
+            items = items.filter(production_company__icontains=q)
+        elif field == 'supply_company':
+            items = items.filter(supply_company__icontains=q)
+        else:  # 전체(모든 항목)
+            items = items.filter(
+                Q(id__iexact=q) |  # id도 문자열로 비교
+                Q(name__icontains=q) |
+                Q(supply_id__icontains=q) |
+                Q(spec__icontains=q) |
+                Q(production_company__icontains=q) |
+                Q(supply_company__icontains=q)
+            )
     return render(request, 'html/item_list.html', {'items': items})
 
 

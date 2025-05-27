@@ -8,7 +8,7 @@ from .models import Item, Product
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['ts_id', 'name', 'supply_id', 'spec', 'production_company', 'supply_company', 'unit_price', 'moq_price', 'quantity', 'moq', 'delivery_date', 'description']
+        fields = ['ts_id', 'name', 'supply_id', 'spec', 'production_company', 'supply_company', 'unit_price', 'moq_price', 'quantity', 'purchase_quantity', 'moq', 'stock_location', 'delivery_date', 'description']
 
 
 class ProductForm(forms.ModelForm):
