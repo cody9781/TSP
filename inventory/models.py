@@ -39,8 +39,24 @@ class Item(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=50, primary_key=True)  # 제품명
-    materials = models.ManyToManyField(Item, related_name='products', blank= True)  # 제품에 연결된 자재(재고) 리스트
+    materials = models.ManyToManyField(
+         Item,
+         through='ProductMaterial',
+         related_name='products',
+         blank= True
+     )  # 제품에 연결된 자재(재고) 리스트
     description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
+
+class ProductMaterial(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=0)   # 자재가 몇 개 들어가는지
+
+    class Meta:
+        unique_together = ('product', 'item')  # 한 제품에 같은 자재 중복 방지
+
+    def __str__(self):
+        return f"{self.product.name} - {self.item.ts_id} ({self.quantity})"

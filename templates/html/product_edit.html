@@ -1,4 +1,5 @@
 {% extends "html/base.html" %}
+{% load custom_filters %}
 {% block content %}
 <div class="card">
     <form class="form-horizontal" method="POST" action="">
@@ -36,6 +37,7 @@
                             <th scope="col">제작사</th>
                             <th scope="col">공급처</th>
                             <th scope="col">재고</th>
+                            <th scope="col">사용수량</th>
                             <th scope="col">위치</th>
                         </tr>
                         </thead>
@@ -61,6 +63,13 @@
                             <td>{{ material.production_company }}</td>
                             <td>{{ material.supply_company }}</td>
                             <td>{{ material.quantity }}</td>
+                            <td>
+                                <input type="number"
+                                       name="quantity_{{ material.pk }}"
+                                       value="{{ material_quantities|get_item:material.pk|default:0 }}"
+                                       min="0"
+                                       style="width: 60px;">
+                            </td>
                             <td>{{ material.stock_location }}</td>
                         </tr>
                         {% empty %}

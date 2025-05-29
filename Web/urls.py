@@ -30,8 +30,9 @@ urlpatterns = [
     path('item/<str:pk>/edit/', inventory.views.item_edit, name='item_edit'),
     path('item/<str:pk>/view/', inventory.views.item_view, name='item_view'),
     path('item/<str:pk>/delete/', inventory.views.item_delete, name='item_delete'),
-    path('item/in/<str:pk>/', inventory.views.item_in, name='item_in'),
-    path('item/out/<str:pk>/', inventory.views.item_out, name='item_out'),
+    # path('item/in/<str:pk>/', inventory.views.item_in, name='item_in'),
+    # path('item/out/<str:pk>/', inventory.views.item_out, name='item_out'),
+    path('item/<int:pk>/stock_update/', inventory.views.item_stock_update, name='item_stock_update'),
 
     path('add_product/', inventory.views.add_product, name='add_product'),
     path('product_list/', inventory.views.product_list, name='product_list'),

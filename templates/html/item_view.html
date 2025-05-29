@@ -1,4 +1,6 @@
 {% extends "html/base.html" %}
+
+{% load custom_filters %}
 {% block content %}
 <div class="card">
     <form class="form-horizontal" method="POST" action="">
@@ -113,13 +115,14 @@
                 </div>
             </div>
             <br>
-            <h5>이 자재가 포함된 제품 리스트</h5>
-            <ul>
+            <h3>이 자재를 사용하는 제품 리스트</h3>
+            <ul style="font-size: 1.5em;">
                 {% for product in products %}
                 <li>
                     <a href="{% url 'product_edit' product.name %}">
                         {{ product.name }}
                     </a>
+                    ({{ product_quantities|get_item:product.pk }}개 사용)
                 </li>
                 {% empty %}
                 <li>이 자재를 사용하는 제품이 없습니다.</li>

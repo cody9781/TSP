@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
-from .models import Item, Product
+from .models import Item, Product, ProductMaterial
 from .forms import ItemForm, ProductForm
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 # Create your views here.
 
 from django.http import HttpResponse
@@ -66,7 +68,7 @@ def add_item(request):
             return redirect('/item_list')
     else:
         form = ItemForm()
-    return render(request, 'html/form_add.html', {'form': form})
+    return render(request, 'html/item_add.html', {'form': form})
 
 @login_required
 def item_edit(request, pk):
@@ -78,7 +80,7 @@ def item_edit(request, pk):
             return redirect('item_list')
     else:
         form = ItemForm(instance=item)
-    return render(request, 'html/form_edit.html', {'form' : form, 'item': item})
+    return render(request, 'html/item_edit.html', {'form' : form, 'item': item})
 
 
 
@@ -95,8 +97,16 @@ def item_edit(request, pk):
 @login_required
 def item_view(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    products = item.products.all()
-    return render(request, 'html/item_view.html', { 'item': item, 'products': products})
+    #products = item.products.all()
+    product_materials = ProductMaterial.objects.filter(item=item).select_related('product')
+    # products 리스트와, 각 제품별 quantity를 딕셔너리로 준비
+    products = [pm.product for pm in product_materials]
+    product_quantities = {pm.product.pk: pm.quantity for pm in product_materials}
+    return render(request, 'html/item_view.html', {
+        'item': item,
+        'products': products,
+        'product_quantities': product_quantities,
+    })
 
 @login_required
 def item_delete1(request, pk):
@@ -114,41 +124,120 @@ def item_delete(request, pk):
         return redirect('item_list')
     return render(request, 'html/item_confirm_delete.html', {'item': item})
 
-@login_required
-def item_in(request, pk):
-    item = get_object_or_404(Item, id=pk)
-    item.quantity += 1  # 입고: 수량 1 증가
-    item.save()
-    messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
-    return redirect('item_list')  # 재고 리스트 페이지로 리다이렉트
+# @login_required
+# def item_in(request, pk):
+#     item = get_object_or_404(Item, id=pk)
+#     item.quantity += 1  # 입고: 수량 1 증가
+#     item.save()
+#     messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
+#     return redirect('item_list')  # 재고 리스트 페이지로 리다이렉트
+#
+# @login_required
+# def item_out(request, pk):
+#     item = get_object_or_404(Item, id=pk)
+#     if item.quantity > 0:
+#         item.quantity -= 1  # 출고: 수량 1 감소
+#         item.save()
+#         messages.success(request, f"{item.name} 출고 완료 (현재 수량: {item.quantity})")
+#     else:
+#         messages.error(request, f"{item.name}의 재고가 부족합니다.")
+#     return redirect('item_list')
 
 @login_required
-def item_out(request, pk):
+@require_POST
+def item_stock_update(request, pk):
     item = get_object_or_404(Item, id=pk)
-    if item.quantity > 0:
-        item.quantity -= 1  # 출고: 수량 1 감소
+    action = request.POST.get('action')
+    try:
+        qty = int(request.POST.get('quantity', 1))
+        if qty < 1:
+            raise ValueError
+    except (ValueError, TypeError):
+        messages.error(request, "수량을 올바르게 입력하세요.")
+        return redirect('item_list')
+
+    if action == "in":
+        item.quantity += qty
         item.save()
-        messages.success(request, f"{item.name} 출고 완료 (현재 수량: {item.quantity})")
+        messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
+    elif action == "out":
+        if item.quantity >= qty:
+            item.quantity -= qty
+            item.save()
+            messages.success(request, f"{item.name} 출고 완료 (현재 수량: {item.quantity})")
+        else:
+            messages.error(request, f"{item.name}의 재고가 부족합니다.")
     else:
-        messages.error(request, f"{item.name}의 재고가 부족합니다.")
+        messages.error(request, "잘못된 동작입니다.")
+
     return redirect('item_list')
 
 
 
 @login_required
 def add_product(request):
-    items = Item.objects.all()
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
-            product = form.save(commit=False)
-            # product.created_by = request.user  # 예: 추가 필드가 있다면 할당
+            product = form.save(commit=False)  # 새 제품 생성
             product.save()
             form.save_m2m()
+
+            # 자재 수량 처리
+            items = Item.objects.all()
+            for item in items:
+                qty = request.POST.get(f'quantity_{item.pk}', 0)
+                try:
+                    qty = int(qty)
+                except (TypeError, ValueError):
+                    qty = 0
+
+                if qty > 0:
+                    ProductMaterial.objects.update_or_create(
+                        product=product,
+                        item=item,
+                        defaults={'quantity': qty}
+                    )
+
             return redirect('product_list')
     else:
         form = ProductForm()
-    return render(request, 'html/add_product.html', {'form': form, 'materials': items})
+
+    items = Item.objects.all()
+    return render(request, 'html/product_add.html', {
+        'form': form,
+        'materials': items,
+    })
+    # product = get_object_or_404(Product)
+    # items = Item.objects.all()
+    # if request.method == 'POST':
+    #     form = ProductForm(request.POST, instance=product)
+    #     if form.is_valid():
+    #         for item in items:
+    #             qty = int(request.POST.get(f'quantity_{item.pk}', 0))
+    #             ProductMaterial.objects.update_or_create(
+    #                 product=product,
+    #                 item=item,
+    #                 defaults={'quantity': qty}
+    #             )
+    #         #product = form.save(commit=False)
+    #         # product.modified_by = request.user  # 예: 수정자 필드가 있다면 할당
+    #         product.save()
+    #         form.save_m2m()
+    #         return redirect('product_list')
+    #     # if form.is_valid():
+    #     #     product = form.save(commit=False)
+    #     #     # product.created_by = request.user  # 예: 추가 필드가 있다면 할당
+    #     #     product.save()
+    #     #     form.save_m2m()
+    #     #     return redirect('product_list')
+    #
+    # else:
+    #     form = ProductForm()
+    # return render(request, 'html/product_add.html', {
+    #     'form': form,
+    #     'materials': items,
+    # })
 
 @login_required
 def product_list(request):
@@ -161,9 +250,21 @@ def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     items = Item.objects.all()
     product_materials = product.materials.values_list('pk', flat=True)
+    material_quantities = {
+        pm.item_id: pm.quantity
+        for pm in product.productmaterial_set.all()
+    }
     if request.method == 'POST':
+
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
+            for item in items:
+                qty = int(request.POST.get(f'quantity_{item.pk}', 0))
+                ProductMaterial.objects.update_or_create(
+                    product=product,
+                    item=item,
+                    defaults={'quantity': qty}
+                )
             product = form.save(commit=False)
             # product.modified_by = request.user  # 예: 수정자 필드가 있다면 할당
             product.save()
@@ -172,12 +273,16 @@ def product_edit(request, pk):
     else:
 
         form = ProductForm(instance=product)
-    return render(request, 'html/edit_product.html', {
+    return render(request, 'html/product_edit.html', {
         'form': form,
         'materials': items,
         'product': product,
-        'product_materials': list(product_materials)
+        'product_materials': list(product_materials),
+        'material_quantities': material_quantities,
     })
+
+
+
 
 @login_required
 def product_delete(request, pk):
