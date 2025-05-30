@@ -7,10 +7,7 @@ from .models import Item, Product, ProductMaterial
 from .forms import ItemForm, ProductForm
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from reversion import create_revision  # 수정된 임포트 경로
 from django.views.generic import ListView
-from reversion.models import Version
-from reversion import set_user, set_comment
 from django.utils.functional import cached_property
 from collections import defaultdict
 from django.core.paginator import Paginator
