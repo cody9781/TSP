@@ -8,7 +8,7 @@ from .models import Item, Product
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['ts_id', 'name', 'supply_id', 'spec', 'production_company', 'supply_company', 'unit_price', 'moq_price', 'quantity', 'purchase_quantity', 'moq', 'stock_location', 'delivery_date', 'description']
+        fields = '__all__'  # id 필드는 자동 제외됨 (AutoField 특성)
 
 
 class ProductForm(forms.ModelForm):

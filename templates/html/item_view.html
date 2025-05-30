@@ -128,6 +128,11 @@
                 <li>이 자재를 사용하는 제품이 없습니다.</li>
                 {% endfor %}
             </ul>
+            {% if products %}
+            <div style="font-size:1.2em; font-weight:bold;">
+                총 {{ total_quantity }}개 사용중입니다.
+            </div>
+            {% endif %}
 
 
         </div>

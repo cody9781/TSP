@@ -2,10 +2,24 @@ from django.contrib import admin
 
 # Register your models here.
 
+from reversion.admin import VersionAdmin
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from .models import Item
+from .models import Item, Product, ProductMaterial
 
 @admin.register(Item)
-class ItemAdmin(ImportExportModelAdmin):
+class ItemAdmin(ImportExportModelAdmin, VersionAdmin):
     list_display = ['supply_id', 'name', 'spec', 'production_company', 'quantity', 'moq']
+
+
+#@admin.register(Item)
+#class ItemAdmin(VersionAdmin):
+#    pass
+
+@admin.register(Product)
+class ProductAdmin(VersionAdmin):
+    pass
+
+@admin.register(ProductMaterial)
+class ProductMaterialAdmin(VersionAdmin):
+    pass

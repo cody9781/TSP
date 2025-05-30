@@ -1,0 +1,149 @@
+{% extends "html/base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title mb-4">변경 이력</h3>
+
+        <!-- 검색창 접근성 개선 -->
+        <div class="mb-3">
+            <label for="historySearch" class="visually-hidden">히스토리 검색</label>
+            <input type="text" id="historySearch" class="form-control"
+                   placeholder="검색어를 입력하세요 (사용자, 필드, 값 등)">
+        </div>
+
+        <table class="table table-sm table-hover text-center" id="historyTable">
+            <colgroup>
+                <col style="width: 12%;">
+                <col style="width: 10%;">
+                <col style="width: 10%;">
+                <col style="width: 68%;">
+            </colgroup>
+            <thead class="thead-light">
+                <tr>
+                    <th>시간</th>
+                    <th>사용자</th>
+                    <th>유형</th>
+                    <th>변경 내용</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pair in version_pairs %}
+                <tr class="history-row">
+                    <td>{{ pair.version.revision.date_created|date:"Y-m-d H:i" }}</td>
+                    <td>{{ pair.version.revision.user|default:"시스템" }}</td>
+                    <td>
+                        {% with model_name=pair.version.content_type.model|lower %}
+                            {% if model_name == 'item' %}자재
+                            {% if pair.version.revision.comment == "Item 생성" %}
+                             생성
+                            {% elif pair.version.revision.comment == "Item 수정" %}
+                             수정
+                            {% endif %}
+                            {% elif model_name == 'product' %}제품
+                            {% if pair.version.revision.comment == "Product 생성" %}
+                             생성
+                            {% elif pair.version.revision.comment == "Product 수정" %}
+                             수정
+                            {% endif %}
+                            {% elif model_name == 'productmaterial' %}자재 연결
+                            {% else %}{{ model_name }}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-left">
+                        {% if pair.changed_fields %}
+                            {% if not pair.prev_version %}
+                                <span class="badge bg-info">신규 생성</span>
+                            {% endif %}
+                            {% for field, change in pair.changed_fields %}
+                                <b>{{ field|humanize_field_name }}</b>
+                                {% if change.old %}
+                                    <span class="text-danger">{{ change.old }}</span> →
+                                {% endif %}
+                                <span class="text-success">{{ change.new }}</span>
+                                {% if not forloop.last %}<br>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">변경 이력이 없습니다.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- 개선된 페이지네이션 -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="페이지 이동">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; 처음</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; 처음</span></li>
+                <li class="page-item disabled"><span class="page-link">이전</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">마지막 &raquo;</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">다음</span></li>
+                <li class="page-item disabled"><span class="page-link">마지막 &raquo;</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// 개선된 검색 기능
+document.getElementById('historySearch').addEventListener('input', function(e) {
+    const search = e.target.value.trim().toLowerCase();
+    const rows = document.querySelectorAll('.history-row');
+
+    rows.forEach(row => {
+        const originalHtml = row.dataset.original || row.innerHTML;
+        row.dataset.original = originalHtml;  // 원본 HTML 저장
+
+        if (search) {
+            const tempContent = originalHtml.toLowerCase();
+            row.style.display = tempContent.includes(search) ? '' : 'none';
+
+            // 하이라이트 적용
+            const highlighted = originalHtml.replace(
+                new RegExp(search, 'gi'),
+                match => `<mark class="bg-warning">${match}</mark>`
+            );
+            row.innerHTML = highlighted;
+        } else {
+            row.style.display = '';
+            row.innerHTML = originalHtml;  // 원상복구
+        }
+    });
+});
+</script>
+{% endblock %}

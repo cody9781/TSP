@@ -39,6 +39,7 @@ urlpatterns = [
     path('products_edit/<str:pk>/', inventory.views.product_edit, name='product_edit'),
     path('products_delete/<str:pk>/', inventory.views.product_delete, name='product_delete'),
 
+    #path('history/', inventory.views.HistoryListView.as_view(), name='history-list'),
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),
     path('inventory/', include('inventory.urls')),

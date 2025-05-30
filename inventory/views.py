@@ -7,6 +7,16 @@ from .models import Item, Product, ProductMaterial
 from .forms import ItemForm, ProductForm
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from reversion import create_revision  # 수정된 임포트 경로
+from django.views.generic import ListView
+from reversion.models import Version
+from reversion import set_user, set_comment
+from django.utils.functional import cached_property
+from collections import defaultdict
+from django.core.paginator import Paginator
+
+
+
 # Create your views here.
 
 from django.http import HttpResponse
@@ -17,9 +27,77 @@ def test(request):
     return render(request, 'temp/mine/tables.html')
 
 
-#def item_list(request):
-#    items = Item.objects.all
-#    return render(request, 'html/item_list.html', {'items': items})
+# def get_changed_fields(version, previous_version):
+#     """두 버전의 field_dict를 비교해 변경된 필드와 값을 반환"""
+#     if not previous_version:
+#         # 최초 생성 버전도 동일한 구조로 반환
+#         return [(key, {'old': None, 'new': value}) for key, value in version.field_dict.items()]
+#     changed = []
+#     for key, value in version.field_dict.items():
+#         prev_value = previous_version.field_dict.get(key)
+#         if value != prev_value:
+#             changed.append((key, {'old': prev_value, 'new': value}))
+#     return changed
+#
+#
+# class HistoryListView(ListView):
+#     template_name = 'html/history_list.html'
+#     context_object_name = 'page_obj'
+#     paginate_by = 20
+#
+#     def get_queryset(self):
+#         # 모든 버전을 한 번에 조회 (쿼리 최적화)
+#         return Version.objects.select_related('revision', 'content_type').filter(
+#             content_type__model__in=['item', 'product', 'productmaterial']
+#         ).order_by('-revision__date_created')
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['main_fields'] = ['ts_id', 'name', 'supply_id', 'product', 'item', 'quantity']
+#
+#         # 객체별 버전 그룹화 함수
+#         def group_versions(versions):
+#             groups = defaultdict(list)
+#             for v in versions:
+#                 key = (v.content_type.id, v.object_id)
+#                 groups[key].append(v)
+#             return groups
+#
+#         # 모든 버전 그룹화
+#         all_versions = list(self.object_list)
+#         grouped = group_versions(all_versions)
+#
+#         # 그룹별 버전 페어 생성
+#         version_pairs = []
+#         for group in grouped.values():
+#             sorted_versions = sorted(group, key=lambda x: x.revision.date_created, reverse=True)
+#             for i, version in enumerate(sorted_versions):
+#                 prev = sorted_versions[i + 1] if i + 1 < len(sorted_versions) else None
+#                 version_pairs.append({
+#                     'version': version,
+#                     'prev_version': prev,
+#                     'changed_fields': get_changed_fields(version, prev)
+#                 })
+#
+#         # 최종 정렬 및 페이징
+#         version_pairs.sort(key=lambda x: x['version'].revision.date_created, reverse=True)
+#         paginator = Paginator(version_pairs, self.paginate_by)
+#         page_number = self.request.GET.get('page')
+#         page_obj = paginator.get_page(page_number)
+#
+#         context['version_pairs'] = page_obj.object_list
+#         context['version_pairs'] = [
+#             pair for pair in context['version_pairs']
+#             if pair['changed_fields']
+#         ]
+#         context['page_obj'] = page_obj
+#         return context
+
+
+
+
+
+
 
 def item_list(request):
     q = request.GET.get('q', '')
@@ -53,30 +131,42 @@ def item_list(request):
     return render(request, 'html/item_list.html', {'items': items})
 
 
-
+# @create_revision()  # 리비전 생성 데코레이터 추가
 @login_required
 def add_item(request):
     if request.method == 'POST':
         form = ItemForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)
-            if not item.quantity:  # None, 0, '' 모두 0으로 처리
-                item.quantity = 0
             item.created_by = request.user
             item.save()
             form.save_m2m()
+
+            # 리비전에 사용자 정보 추가
+            # set_user(request.user)
+            # set_comment("Item 생성")
+
             return redirect('/item_list')
     else:
         form = ItemForm()
     return render(request, 'html/item_add.html', {'form': form})
 
+
+
+
 @login_required
+#@create_revision()
 def item_edit(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if request.method == 'POST':
         form = ItemForm(request.POST, instance=item)
         if form.is_valid():
             form.save()
+
+            # 리비전에 사용자 정보 추가
+
+            # set_user(request.user)
+            # set_comment("Item 수정")
             return redirect('item_list')
     else:
         form = ItemForm(instance=item)
@@ -102,10 +192,12 @@ def item_view(request, pk):
     # products 리스트와, 각 제품별 quantity를 딕셔너리로 준비
     products = [pm.product for pm in product_materials]
     product_quantities = {pm.product.pk: pm.quantity for pm in product_materials}
+    total_quantity = sum(product_quantities.get(product.pk, 0) for product in products)
     return render(request, 'html/item_view.html', {
         'item': item,
         'products': products,
         'product_quantities': product_quantities,
+        'total_quantity': total_quantity,
     })
 
 @login_required
@@ -117,34 +209,21 @@ def item_delete1(request, pk):
     return redirect('item_edit', pk=pk)
 
 @login_required
+#@create_revision()
 def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if request.method == 'POST':
         item.delete()
+
+        # set_user(request.user)
+        # set_comment("Item 삭제")
         return redirect('item_list')
     return render(request, 'html/item_confirm_delete.html', {'item': item})
 
-# @login_required
-# def item_in(request, pk):
-#     item = get_object_or_404(Item, id=pk)
-#     item.quantity += 1  # 입고: 수량 1 증가
-#     item.save()
-#     messages.success(request, f"{item.name} 입고 완료 (현재 수량: {item.quantity})")
-#     return redirect('item_list')  # 재고 리스트 페이지로 리다이렉트
-#
-# @login_required
-# def item_out(request, pk):
-#     item = get_object_or_404(Item, id=pk)
-#     if item.quantity > 0:
-#         item.quantity -= 1  # 출고: 수량 1 감소
-#         item.save()
-#         messages.success(request, f"{item.name} 출고 완료 (현재 수량: {item.quantity})")
-#     else:
-#         messages.error(request, f"{item.name}의 재고가 부족합니다.")
-#     return redirect('item_list')
 
 @login_required
 @require_POST
+#@create_revision()
 def item_stock_update(request, pk):
     item = get_object_or_404(Item, id=pk)
     action = request.POST.get('action')
@@ -170,11 +249,15 @@ def item_stock_update(request, pk):
     else:
         messages.error(request, "잘못된 동작입니다.")
 
+    # 리비전에 사용자 정보 추가
+    # set_user(request.user)
+    # set_comment("Item 수정")
     return redirect('item_list')
 
 
 
 @login_required
+#@create_revision()
 def add_product(request):
     if request.method == 'POST':
         form = ProductForm(request.POST)
@@ -199,6 +282,8 @@ def add_product(request):
                         defaults={'quantity': qty}
                     )
 
+            # set_user(request.user)
+            # set_comment("Product 생성")
             return redirect('product_list')
     else:
         form = ProductForm()
@@ -208,36 +293,6 @@ def add_product(request):
         'form': form,
         'materials': items,
     })
-    # product = get_object_or_404(Product)
-    # items = Item.objects.all()
-    # if request.method == 'POST':
-    #     form = ProductForm(request.POST, instance=product)
-    #     if form.is_valid():
-    #         for item in items:
-    #             qty = int(request.POST.get(f'quantity_{item.pk}', 0))
-    #             ProductMaterial.objects.update_or_create(
-    #                 product=product,
-    #                 item=item,
-    #                 defaults={'quantity': qty}
-    #             )
-    #         #product = form.save(commit=False)
-    #         # product.modified_by = request.user  # 예: 수정자 필드가 있다면 할당
-    #         product.save()
-    #         form.save_m2m()
-    #         return redirect('product_list')
-    #     # if form.is_valid():
-    #     #     product = form.save(commit=False)
-    #     #     # product.created_by = request.user  # 예: 추가 필드가 있다면 할당
-    #     #     product.save()
-    #     #     form.save_m2m()
-    #     #     return redirect('product_list')
-    #
-    # else:
-    #     form = ProductForm()
-    # return render(request, 'html/product_add.html', {
-    #     'form': form,
-    #     'materials': items,
-    # })
 
 @login_required
 def product_list(request):
@@ -246,6 +301,7 @@ def product_list(request):
 
 
 @login_required
+#@create_revision()
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     items = Item.objects.all()
@@ -269,6 +325,9 @@ def product_edit(request, pk):
             # product.modified_by = request.user  # 예: 수정자 필드가 있다면 할당
             product.save()
             form.save_m2m()
+
+            # set_user(request.user)
+            # set_comment("Product 수정")
             return redirect('product_list')
     else:
 
@@ -296,3 +355,4 @@ def product_delete(request, pk):
     return render(request, 'html/product_confirm_delete.html', {
         'product': product
     })
+
